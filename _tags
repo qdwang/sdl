@@ -1,0 +1,5 @@
+<libparser/parser.cmx> : for-pack(Libparser)
+<libparser/lexer.cmx> : for-pack(Libparser)
+<libparser/sdl.cmx> : for-pack(Libparser)
+
+<test/test_parser.cmx> : for-pack(Test)

@@ -1,0 +1,7 @@
+PKG core
+
+S ./
+S ./libparser
+S ./test
+
+B ./_build/**
