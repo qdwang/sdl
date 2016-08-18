@@ -23,17 +23,17 @@ let repeat_string (s : string) (num : int) =
 let decorate_term (t : string) (v : string) =
   "[" ^ t ^ "|" ^ v ^ "]"
 
-let rec print (t : term) (level : int) =
+let rec printAST (t : term) (level : int) =
   "\n" ^ (repeat_string " " (level * 2)) ^
   (match t with
     | `Type x -> decorate_term "Type" x
     | `Var x -> decorate_term "Var" x
-    | `VarAssign (v, t) -> decorate_term "VarAssign" (v ^ "," ^ print t (level + 1))
-    | `TypeDefine (v, t) -> decorate_term "TypeDefine" (v ^ "," ^ print t (level + 1))
+    | `VarAssign (v, t) -> decorate_term "VarAssign" (v ^ "," ^ printAST t (level + 1))
+    | `TypeDefine (v, t) -> decorate_term "TypeDefine" (v ^ "," ^ printAST t (level + 1))
     | `TypeWithVar (v, t) -> decorate_term "TypeWithVar" (v ^ "," ^ t)
-    | `TypeImply (t1, t2) -> decorate_term "TypeImply" ((print t1 (level + 1)) ^
-                                                        List.fold ~init:"" ~f:(^) (List.map t2 ~f:(fun x -> print x (level + 1))))
-    | `Lambda (v,t) -> decorate_term "Lambda" (v ^ "," ^ print t (level + 1))
-    | `Application (t1, t2) -> decorate_term "Application" (print t1 (level + 1) ^
-                                                            List.fold ~init:"" ~f:(^) (List.map t2 ~f:(fun x -> " " ^ print x (level + 1))))
+    | `TypeImply (t1, t2) -> decorate_term "TypeImply" ((printAST t1 (level + 1)) ^
+                                                        List.fold ~init:"" ~f:(^) (List.map t2 ~f:(fun x -> printAST x (level + 1))))
+    | `Lambda (v,t) -> decorate_term "Lambda" (v ^ "," ^ printAST t (level + 1))
+    | `Application (t1, t2) -> decorate_term "Application" (printAST t1 (level + 1) ^
+                                                            List.fold ~init:"" ~f:(^) (List.map t2 ~f:(fun x -> " " ^ printAST x (level + 1))))
     )
