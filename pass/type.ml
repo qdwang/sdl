@@ -1,15 +1,10 @@
 open Libparser.Sdl
 open Core.Std
 
-let get_option_string (s : string option) =
-    match s with
-      | Some x -> x
-      | None -> ""
-
-let rec infer_type (tree : term) =
+let rec infer_type (tree : term) : t =
     match tree with
     | `Type info -> 
-        info.t <- Some info.raw;
+        info.t <- Type info.raw;
         info.t
     | `Var info -> info.t
     | `VarAssign info ->
@@ -21,28 +16,35 @@ let rec infer_type (tree : term) =
         info.t <- infer_type t;
         info.t
     | `TypeWithVar info ->
-        let (var, t) = info.raw in
-        info.t <- Some t;
+        let (_, t) = info.raw in
+        info.t <- Type t;
         info.t
     | `TypeImply info ->
         let (t1, t2) = info.raw in
-        let t_t1 = get_option_string (infer_type t1) in
-        let t_t2 =  List.fold ~init:"" ~f:(^) (List.map t2 ~f:(fun x -> " -> " ^ get_option_string (infer_type x))) in
-        info.t <- Some (t_t1 ^ t_t2);
+        let t_t1 = infer_type t1 in
+        let t_t2 = List.map t2 ~f:infer_type in
+        info.t <- Imply (t_t1 :: t_t2);
         info.t
     | `Lambda info ->
         let (var, t) = info.raw in
-        info.t <- infer_type t;
+        let body_t = infer_type t in
+        info.t <- Imply (match body_t with 
+            | None -> [None]
+            | Type x -> [Type var; Type x]
+            | Imply lst -> Type var :: lst);
         info.t
     | `Application info ->
-        let (t1, t2) = info.raw in
-        let t_t1 = get_option_string (infer_type t1) in
-        let t_t2 =  List.fold ~init:"" ~f:(^) (List.map t2 ~f:(fun x -> " -> " ^ get_option_string (infer_type x))) in
-        info.t <- Some (t_t1 ^ t_t2);
+        (* TODO: type check *)
         info.t
 
-let decorate_type (v : string) (t : string option) =
-  "[" ^ v ^ "|" ^ get_option_string t ^ "]"
+let decorate_type (v : string) (t : t) =
+  let rec print_t t =   
+      match t with
+        | None -> "None"
+        | Type x -> x
+        | Imply lst -> List.fold ~init:"" ~f:(^) (List.map lst ~f:(fun x -> " -> " ^ print_t x))
+  in
+  "[" ^ v ^ "|" ^ print_t t ^ "]"
 
 let rec printType (t : term) (level : int) =
   "\n" ^ (repeat_string " " (level * 2)) ^

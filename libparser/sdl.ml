@@ -1,8 +1,13 @@
 open Core.Std
 
+type t = 
+  | None
+  | Type of string
+  | Imply of t list
+
 type 'a info = {
   raw: 'a;
-  mutable t: string option;
+  mutable t: t;
 }
 
 let gen_info s = {
