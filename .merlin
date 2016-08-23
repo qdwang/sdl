@@ -3,5 +3,6 @@ PKG core
 S ./
 S ./libparser
 S ./test
+S ./pass
 
 B ./_build/**

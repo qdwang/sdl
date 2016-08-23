@@ -3,3 +3,6 @@
 <libparser/sdl.cmx> : for-pack(Libparser)
 
 <test/test_parser.cmx> : for-pack(Test)
+<test/test_type_infer.cmx> : for-pack(Test)
+
+<pass/type.cmx> : for-pack(Pass)
