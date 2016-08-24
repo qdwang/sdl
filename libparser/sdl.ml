@@ -1,7 +1,8 @@
 open Core.Std
 
 type t = 
-  | None
+  | Unit
+  | TYPE
   | Type of string
   | Imply of t list
 
@@ -12,7 +13,7 @@ type 'a info = {
 
 let gen_info s = {
     raw = s;
-    t = None;
+    t = Unit;
   }
 
 type term = [

@@ -15,6 +15,7 @@ let test sample =
   match result with
   | Some v ->
     List.iter v ~f:(fun x -> 
-        let _ = Pass.Type.infer_type x in
+        let _ = Pass.Type.infer_type Pass.Type.global_env x in
         printf "%s\n" (Pass.Type.printType x 0))
   | None -> ()
+ 
