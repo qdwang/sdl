@@ -11,9 +11,9 @@ let list_split (lst : 'a list) (pos_to_top : int) =
         if p <= 0 then 
             (lst1, lst2)
         else
-            match lst1 with
+            match lst2 with
                 | [] -> (lst1, lst2)
-                | hd :: tl -> split (hd :: lst1) lst2 (p - 1) in
+                | hd :: tl -> split (hd :: lst1) tl (p - 1) in
     split [] lst pos_to_top  
 
 let rec find_in_env (var : string) (env : env) (pos_to_bottom : int option) = 
@@ -27,12 +27,23 @@ let rec find_in_env (var : string) (env : env) (pos_to_bottom : int option) =
         | Some v, _ -> Some v
         | None, None -> None
 
+let decorate_type (v : string) (t : t) =
+  let rec print_t t =   
+      match t with
+        | Unit -> "Unit"
+        | IsType x -> "IsType(" ^ x ^ ")"
+        | OfType x -> "OfType(" ^ x ^ ")"
+        | Imply lst -> List.fold ~init:"" ~f:(fun a b -> if a = "" then b else a ^ " -> " ^ b) (List.map lst ~f:print_t)
+  in
+  "[" ^ v ^ " | " ^ print_t t ^ "]"
+
+
 let global_env = {root = None; stack = []}
 
-let rec infer_type (current_env : env) (tree : term)  : t =
+let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t =
     match tree with
     | `Type info -> 
-        info.t <- TYPE;
+        info.t <- IsType info.raw;
         info.t
     | `Var info -> 
         let result = find_in_env info.raw current_env None in
@@ -41,7 +52,23 @@ let rec infer_type (current_env : env) (tree : term)  : t =
             | Some (_, t) -> info.t <- t);
         info.t
     | `VarAssign info ->
-        (* TODO: type check *)
+        let (var, t) = info.raw in
+        let var_type = match find_in_env var current_env None with
+            | None -> Unit 
+            | Some (_, t) -> t 
+            in
+        info.t <- infer_type current_env t ~assign_t:var_type;
+        printf "%s" (decorate_type ("`" ^ var ^ "`") info.t);
+        (match var_type with
+            | Imply lst ->
+                (match List.rev lst with
+                    | [] -> ()
+                    | hd :: tl -> 
+                        if hd = IsType "Type" then 
+                            current_env.stack <- (var, info.t) :: current_env.stack
+                        else
+                            ())
+            | _ -> ());
         info.t
     | `TypeDefine info ->
         let (var, t) = info.raw in
@@ -50,7 +77,7 @@ let rec infer_type (current_env : env) (tree : term)  : t =
         info.t
     | `TypeWithVar info ->
         let (var, t) = info.raw in
-        info.t <- Type t;
+        info.t <- IsType t;
         current_env.stack <- (var, info.t) :: current_env.stack;
         info.t
     | `TypeImply info ->
@@ -62,14 +89,16 @@ let rec infer_type (current_env : env) (tree : term)  : t =
         info.t
     | `Lambda info ->
         let (var, t) = info.raw in
-        let current_env = {root = Some (current_env, List.length current_env.stack); stack = []} in 
-        let body_t = infer_type current_env t in
+        let current_env = {root = Some (current_env, List.length current_env.stack); stack = []} in
+        let assigned_type = match assign_t with | None -> Unit | Some t -> t in 
+        let (assigned_hd, assigned_tl) = match assigned_type with | Imply (hd :: tl) -> (hd, Imply tl) | _ -> (Unit, Unit) in
+        let body_t = infer_type current_env t ~assign_t:assigned_tl in
         info.t <- (match body_t with 
             | Unit -> Unit
-            | TYPE -> Imply [Unit; TYPE]
-            | Type x -> Imply [Unit; Type x]
-            | Imply lst -> Imply (Unit :: lst));
-        current_env.stack <- (var, info.t) :: current_env.stack;
+            | IsType x -> Imply [assigned_hd; IsType x]
+            | OfType x -> Imply [assigned_hd; OfType x]
+            | Imply lst -> Imply (assigned_hd :: lst));
+        current_env.stack <- (var, assigned_hd) :: current_env.stack;
         info.t
     | `Application info ->
         let (t1, t2) = info.raw in
@@ -77,31 +106,21 @@ let rec infer_type (current_env : env) (tree : term)  : t =
         let t_t2 = List.map t2 ~f:(infer_type current_env) in
         info.t <- (match t_t1 with
             | Unit -> Unit
-            | TYPE -> Unit
-            | Type _ -> Unit
+            | IsType _ -> Unit
+            | OfType _ -> Unit
             | Imply lst -> 
                 let (lst1, lst2) = list_split lst (List.length t_t2) in
                 if lst1 = t_t2 then
                     Imply lst2
                 else
-                    Unit);
+                    IsType "error");
         info.t
-
-let decorate_type (v : string) (t : t) =
-  let rec print_t t =   
-      match t with
-        | Unit -> "Unit"
-        | TYPE -> "TYPE"
-        | Type x -> x
-        | Imply lst -> List.fold ~init:"" ~f:(^) (List.map lst ~f:(fun x -> " -> " ^ print_t x))
-  in
-  "[" ^ v ^ "|" ^ print_t t ^ "]"
 
 let rec printType (t : term) (level : int) =
   "\n" ^ (repeat_string " " (level * 2)) ^
   (match t with
-    | `Type info -> decorate_type info.raw info.t
-    | `Var info -> decorate_type info.raw info.t
+    | `Type info -> ""
+    | `Var info -> ""
     | `VarAssign info ->
       let (v, t) = info.raw in  
       decorate_type (v ^ "," ^ printType t (level + 1)) info.t
@@ -109,17 +128,12 @@ let rec printType (t : term) (level : int) =
       let (v, t) = info.raw in 
       decorate_type (v ^ "," ^ printType t (level + 1)) info.t
     | `TypeWithVar info -> 
-      let (v, t) = info.raw in 
-      decorate_type (v ^ "," ^ t) info.t
+      ""
     | `TypeImply info -> 
-      let (t1, t2) = info.raw in 
-      decorate_type ((printType t1 (level + 1)) ^ List.fold ~init:"" ~f:(^) (List.map t2 ~f:(fun x -> printType x (level + 1))))
-                    info.t
+      ""
     | `Lambda info -> 
       let (v, t) = info.raw in 
-      decorate_type (v ^ "," ^ printType t (level + 1)) info.t
+      decorate_type ("\\" ^ v ^ "," ^ printType t (level + 1)) info.t
     | `Application info -> 
-      let (t1, t2) = info.raw in 
-      decorate_type (printType t1 (level + 1) ^ List.fold ~init:"" ~f:(^) (List.map t2 ~f:(fun x -> " " ^ printType x (level + 1))))
-                    info.t
+      ""
     )

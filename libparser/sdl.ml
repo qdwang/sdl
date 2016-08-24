@@ -2,8 +2,8 @@ open Core.Std
 
 type t = 
   | Unit
-  | TYPE
-  | Type of string
+  | IsType of string
+  | OfType of string
   | Imply of t list
 
 type 'a info = {
