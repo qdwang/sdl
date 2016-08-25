@@ -9,13 +9,16 @@ let prepare content =
 let test sample =
   let lexbuf = Lexing.from_string (prepare sample) in
   let result = try Libparser.Parser.prog Libparser.Lexer.read lexbuf with
-    | SyntaxError msg -> printf "%s" msg; None
-    | Libparser.Parser.Error -> printf "%s" "Parser Error:"; None
+    | SyntaxError msg -> print_endline msg; None
+    | Libparser.Parser.Error -> print_endline "Parser Error:"; None
   in
+  let fmt = Format.std_formatter in
+  Format.pp_set_margin fmt 150;
   match result with
   | Some v ->
     List.iter v ~f:(fun x -> 
         let _ = Pass.Type.infer_type Pass.Type.global_env x in
-        printf "%s\n" (Pass.Type.printType x 0))
+        Format.pp_print_newline fmt ();
+        Format.pp_print_newline fmt ();
+        Libparser.Sdl.pp_term fmt x)
   | None -> ()
- 

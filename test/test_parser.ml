@@ -8,10 +8,10 @@ let prepare content =
 let test sample =
   let lexbuf = Lexing.from_string (prepare sample) in
   let result = try Libparser.Parser.prog Libparser.Lexer.read lexbuf with
-    | SyntaxError msg -> printf "%s" msg; None
-    | Libparser.Parser.Error -> printf "%s" "Parser Error:"; None
+    | SyntaxError msg -> print_endline msg; None
+    | Libparser.Parser.Error -> print_endline "Parser Error:"; None
   in
   match result with
   | Some v ->
-    List.iter v ~f:(fun x -> printf "%s\n" (Libparser.Sdl.printAST x 0))
+    List.iter v ~f:(fun x -> print_endline (Libparser.Sdl.show_term x))
   | None -> ()

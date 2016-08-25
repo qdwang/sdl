@@ -5,6 +5,7 @@ type env = {
     root: (env * int) option;
     mutable stack: (string * t) list;
 }
+[@@deriving show]
 
 let list_split (lst : 'a list) (pos_to_top : int) =
     let rec split lst1 lst2 p =
@@ -27,17 +28,6 @@ let rec find_in_env (var : string) (env : env) (pos_to_bottom : int option) =
         | Some v, _ -> Some v
         | None, None -> None
 
-let decorate_type (v : string) (t : t) =
-  let rec print_t t =   
-      match t with
-        | Unit -> "Unit"
-        | IsType x -> "IsType(" ^ x ^ ")"
-        | OfType x -> "OfType(" ^ x ^ ")"
-        | Imply lst -> List.fold ~init:"" ~f:(fun a b -> if a = "" then b else a ^ " -> " ^ b) (List.map lst ~f:print_t)
-  in
-  "[" ^ v ^ " | " ^ print_t t ^ "]"
-
-
 let global_env = {root = None; stack = []}
 
 let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t =
@@ -58,7 +48,6 @@ let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t 
             | Some (_, t) -> t 
             in
         info.t <- infer_type current_env t ~assign_t:var_type;
-        printf "%s" (decorate_type ("`" ^ var ^ "`") info.t);
         (match var_type with
             | Imply lst ->
                 (match List.rev lst with
@@ -115,25 +104,3 @@ let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t 
                 else
                     IsType "error");
         info.t
-
-let rec printType (t : term) (level : int) =
-  "\n" ^ (repeat_string " " (level * 2)) ^
-  (match t with
-    | `Type info -> ""
-    | `Var info -> ""
-    | `VarAssign info ->
-      let (v, t) = info.raw in  
-      decorate_type (v ^ "," ^ printType t (level + 1)) info.t
-    | `TypeDefine info -> 
-      let (v, t) = info.raw in 
-      decorate_type (v ^ "," ^ printType t (level + 1)) info.t
-    | `TypeWithVar info -> 
-      ""
-    | `TypeImply info -> 
-      ""
-    | `Lambda info -> 
-      let (v, t) = info.raw in 
-      decorate_type ("\\" ^ v ^ "," ^ printType t (level + 1)) info.t
-    | `Application info -> 
-      ""
-    )
