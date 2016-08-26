@@ -66,14 +66,27 @@ let type_apply (fn_t : t) (args_t : t list) (current_env : env) : t =
         match fn, args with
             | Imply (fn_hd :: fn_tl), args_hd :: args_tl ->
                 if type_check fn_hd args_hd then
-                    (match fn_hd with
+                    ((match fn_hd with
                         | IsType (v, _) -> 
                             type_env.stack <- (v, args_hd) :: type_env.stack
                         | _ -> ());
-                    apply (Imply fn_tl) args_tl
+                    apply (Imply fn_tl) args_tl)
+                else
+                    Unit
             | _ -> fn
     in
     replace_type type_env (apply fn_t args_t_replaced)
+
+let rec flatten_t (t : t) =
+    match t with
+        | Imply l -> 
+            let lst = List.map l flatten_t in
+            Imply (match List.rev lst with
+                | Imply tl :: hd ->
+                    List.rev hd @ tl
+                | _ -> lst)
+        | _ -> t
+
 
 let global_env = {root = None; stack = []}
 
@@ -121,7 +134,7 @@ let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t 
         let current_env = {root = Some (current_env, List.length current_env.stack); stack = []} in 
         let t_t1 = infer_type current_env t1 in
         let t_t2 = List.map t2 ~f:(infer_type current_env) in
-        info.t <- Imply (t_t1 :: t_t2);
+        info.t <- flatten_t (Imply (t_t1 :: t_t2));
         info.t
     | `Lambda info ->
         let (var, t) = info.raw in
