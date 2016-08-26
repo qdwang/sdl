@@ -21,19 +21,66 @@ let rec find_in_env (var : string) (env : env) (pos_to_bottom : int option) =
     let result = List.find (match pos_to_bottom with 
             | None -> env.stack  
             | Some pos -> let (lst1, lst2) = list_split env.stack (List.length env.stack - pos) in lst2
-        ) (fun x -> let (s, t) = x in s = var)
+        ) (fun (s, t) -> s = var)
         in
     match (result, env.root) with
         | None, Some (root_env, root_pos) -> find_in_env var root_env (Some root_pos) 
         | Some v, _ -> Some v
         | None, None -> None
 
+let rec zip lst1 lst2 =
+    match lst1, lst2 with
+        | (hd1 :: tl1), (hd2 :: tl2) -> (hd1, hd2) :: (zip tl1 tl2)
+        | _ -> []
+
+let rec type_check (t1 : t) (t2 : t) : bool =
+    match t1, t2 with
+        | IsType (_, "Type"), _ -> true
+        | IsType (x, ""), IsType (y, "") -> x = y
+        | IsType (x, ""), IsType (_, y) -> x = y
+        | IsType (_, x), IsType (y, "") -> x = y
+        | IsType (_, x), IsType (_, y) -> x = y
+        | Imply lst1, Imply lst2 -> 
+            let (len1, len2) = List.length lst1, List.length lst2 in
+            if len1 = len2 then
+                not (List.exists (List.map (zip lst1 lst2) (fun (x, y) -> type_check x y)) (fun x -> not x))
+            else
+                false
+        | _ -> false
+
+let rec replace_type (env : env) (t : t) : t = 
+    let find v = 
+        match find_in_env v env None with
+            | Some (v, t) -> t
+            | None -> t
+    in
+    match t with
+        | IsType (v, "") -> find v
+        | Imply lst -> Imply (List.map lst (replace_type env))
+        | _ -> t
+
+let type_apply (fn_t : t) (args_t : t list) (current_env : env) : t =
+    let type_env = {root = None; stack = []} in
+    let args_t_replaced = List.map args_t (replace_type current_env) in
+    let rec apply (fn : t) (args : t list) : t =
+        match fn, args with
+            | Imply (fn_hd :: fn_tl), args_hd :: args_tl ->
+                if type_check fn_hd args_hd then
+                    (match fn_hd with
+                        | IsType (v, _) -> 
+                            type_env.stack <- (v, args_hd) :: type_env.stack
+                        | _ -> ());
+                    apply (Imply fn_tl) args_tl
+            | _ -> fn
+    in
+    replace_type type_env (apply fn_t args_t_replaced)
+
 let global_env = {root = None; stack = []}
 
 let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t =
     match tree with
     | `Type info -> 
-        info.t <- IsType info.raw;
+        info.t <- IsType (info.raw, if info.raw = "Type" then "Type" else "");
         info.t
     | `Var info -> 
         let result = find_in_env info.raw current_env None in
@@ -53,7 +100,7 @@ let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t 
                 (match List.rev lst with
                     | [] -> ()
                     | hd :: tl -> 
-                        if hd = IsType "Type" then 
+                        if hd = IsType ("Type", "Type") then 
                             current_env.stack <- (var, info.t) :: current_env.stack
                         else
                             ())
@@ -66,7 +113,7 @@ let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t 
         info.t
     | `TypeWithVar info ->
         let (var, t) = info.raw in
-        info.t <- IsType t;
+        info.t <- IsType (var, t);
         current_env.stack <- (var, info.t) :: current_env.stack;
         info.t
     | `TypeImply info ->
@@ -80,11 +127,15 @@ let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t 
         let (var, t) = info.raw in
         let current_env = {root = Some (current_env, List.length current_env.stack); stack = []} in
         let assigned_type = match assign_t with | None -> Unit | Some t -> t in 
-        let (assigned_hd, assigned_tl) = match assigned_type with | Imply (hd :: tl) -> (hd, Imply tl) | _ -> (Unit, Unit) in
+        let (assigned_hd, assigned_tl) = match assigned_type with 
+            | Imply (hd :: tl) -> ((match hd with 
+                                    | IsType (v, t) -> IsType (var, t)
+                                    | x -> x), Imply tl) 
+            | _ -> (Unit, Unit) in
         let body_t = infer_type current_env t ~assign_t:assigned_tl in
         info.t <- (match body_t with 
             | Unit -> Unit
-            | IsType x -> Imply [assigned_hd; IsType x]
+            | IsType (x, y) -> Imply [assigned_hd; IsType (x, y)]
             | OfType x -> Imply [assigned_hd; OfType x]
             | Imply lst -> Imply (assigned_hd :: lst));
         current_env.stack <- (var, assigned_hd) :: current_env.stack;
@@ -93,14 +144,5 @@ let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t 
         let (t1, t2) = info.raw in
         let t_t1 = infer_type current_env t1 in
         let t_t2 = List.map t2 ~f:(infer_type current_env) in
-        info.t <- (match t_t1 with
-            | Unit -> Unit
-            | IsType _ -> Unit
-            | OfType _ -> Unit
-            | Imply lst -> 
-                let (lst1, lst2) = list_split lst (List.length t_t2) in
-                if lst1 = t_t2 then
-                    Imply lst2
-                else
-                    IsType "error");
+        info.t <- type_apply t_t1 t_t2 current_env;
         info.t

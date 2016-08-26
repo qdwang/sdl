@@ -2,7 +2,7 @@ open Core.Std
 
 type t = 
   | Unit
-  | IsType of string
+  | IsType of string * string
   | OfType of string
   | Imply of t list 
  [@@deriving show]
