@@ -142,16 +142,16 @@ let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t 
         let assigned_type = match assign_t with | None -> Unit | Some t -> t in 
         let (assigned_hd, assigned_tl) = match assigned_type with 
             | Imply (hd :: tl) -> ((match hd with 
-                                    | IsType (v, t) -> IsType (var, t)
+                                    | IsType (v, t) -> if t = "Type" then IsType (var, t) else OfType v
                                     | x -> x), Imply tl) 
             | _ -> (Unit, Unit) in
+        current_env.stack <- (var, assigned_hd) :: current_env.stack;
         let body_t = infer_type current_env t ~assign_t:assigned_tl in
         info.t <- (match body_t with 
-            | Unit -> Unit
+            | Unit -> Imply [assigned_hd; Unit]
             | IsType (x, y) -> Imply [assigned_hd; IsType (x, y)]
             | OfType x -> Imply [assigned_hd; OfType x]
             | Imply lst -> Imply (assigned_hd :: lst));
-        current_env.stack <- (var, assigned_hd) :: current_env.stack;
         info.t
     | `Application info ->
         let (t1, t2) = info.raw in
