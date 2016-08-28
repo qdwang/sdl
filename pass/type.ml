@@ -1,6 +1,9 @@
 open Libparser.Sdl
 open Core.Std
 
+let debug_print lst =
+    print_endline ("\n" ^ (List.fold ~init:"" ~f:(fun a b -> a ^ "::" ^ b) lst))
+
 type env = {
     root: (env * int) option;
     mutable stack: (string * t) list;
@@ -10,7 +13,7 @@ type env = {
 let list_split (lst : 'a list) (pos_to_top : int) =
     let rec split lst1 lst2 p =
         if p <= 0 then 
-            (lst1, lst2)
+            (List.rev lst1, lst2)
         else
             match lst2 with
                 | [] -> (lst1, lst2)
@@ -55,7 +58,8 @@ let rec replace_type (env : env) (t : t) : t =
             | None -> t
     in
     match t with
-        | IsType (v, "") -> find v
+        | IsType (v, "") -> find v 
+        | OfType x -> find x
         | Imply lst -> Imply (List.map lst (replace_type env))
         | _ -> t
 
@@ -70,9 +74,9 @@ let type_apply (fn_t : t) (args_t : t list) (current_env : env) : t =
                         | IsType (v, _) -> 
                             type_env.stack <- (v, args_hd) :: type_env.stack
                         | _ -> ());
-                    apply (Imply fn_tl) args_tl)
+                    apply (Imply (List.map fn_tl (replace_type type_env))) args_tl)
                 else
-                    Unit
+                    IsType (show fn_hd ^ " && " ^ show args_hd, "ERROR")
             | _ -> fn
     in
     replace_type type_env (apply fn_t args_t_replaced)
@@ -86,7 +90,6 @@ let rec flatten_t (t : t) =
                     List.rev hd @ tl
                 | _ -> lst)
         | _ -> t
-
 
 let global_env = {root = None; stack = []}
 
@@ -155,7 +158,16 @@ let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t 
         info.t
     | `Application info ->
         let (t1, t2) = info.raw in
-        let t_t1 = infer_type current_env t1 in
-        let t_t2 = List.map t2 ~f:(infer_type current_env) in
+        let assigned_type = match assign_t with | None -> Unit | Some t -> t in 
+        let assigned_hd = match assigned_type with 
+            | Imply (hd :: _) -> hd
+            | _ -> Unit in
+        let t_t1 = infer_type current_env t1 ~assign_t:assigned_hd in
+        let t_t2 = match t_t1 with
+            | Imply lst -> 
+                let (t_t1_lst1, t_t1_ls2) = list_split lst (List.length t2) in
+                List.map (zip t_t1_lst1 t2) ~f:(fun (t1, t2) -> infer_type current_env t2 ~assign_t:t1)
+            | _ -> [] 
+        in
         info.t <- type_apply t_t1 t_t2 current_env;
         info.t
