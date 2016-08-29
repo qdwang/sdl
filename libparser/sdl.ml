@@ -5,7 +5,7 @@ type t =
   | IsType of string * string
   | OfType of string
   | Imply of t list 
- [@@deriving show]
+[@@deriving show]
 
 type 'a info = {
   raw: 'a;
@@ -14,9 +14,9 @@ type 'a info = {
 [@@deriving show]
 
 let gen_info s = {
-    raw = s;
-    t = Unit;
-  }
+  raw = s;
+  t = Unit;
+}
 
 type term = [
   | `Type of string info
