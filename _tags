@@ -6,3 +6,4 @@
 <test/test_type_infer.cmx> : for-pack(Test)
 
 <pass/type.cmx> : for-pack(Pass)
+<pass/parse.cmx> : for-pack(Pass)
