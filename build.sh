@@ -1,10 +1,12 @@
 #!/bin/sh
 
+menhir --table ./libparser/parser_gen.mly --base ./libparser/parser
+
 ocamlbuild \
     -use-ocamlfind \
-    -use-menhir \
     -pkg core \
     -pkg ppx_deriving.std \
+    -pkg menhirLib \
     -tag thread \
     -tag debug \
     -tag bin_annot \

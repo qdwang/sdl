@@ -1,0 +1,510 @@
+prog: LAMBDA PR 
+##
+## Ends in an error in state: 5.
+##
+## elem_term -> LAMBDA . VAR DOT lambda_term [ PR NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## LAMBDA 
+##
+
+Ill-formed elem_term
+
+prog: LAMBDA VAR DOT PL PL PR 
+##
+## Ends in an error in state: 14.
+##
+## atomic_elem_term -> PL . elem_term PR [ VAR PR PL ]
+## atomic_type_term -> PL . VAR COLON VAR PR [ ARROW ]
+## atomic_type_term -> PL . atomic_type_term nonempty_list(imply_term) PR [ ARROW ]
+##
+## The known suffix of the stack is as follows:
+## PL 
+##
+
+Ill-formed atomic_type_term
+
+prog: LAMBDA VAR DOT PL PL VAR NEWLINE 
+##
+## Ends in an error in state: 15.
+##
+## atomic_elem_term -> VAR . [ VAR PR PL ]
+## atomic_type_term -> VAR . [ ARROW ]
+## atomic_type_term -> PL VAR . COLON VAR PR [ PR NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## PL VAR 
+##
+
+Ill-formed atomic term
+
+prog: LAMBDA VAR DOT PL PR 
+##
+## Ends in an error in state: 9.
+##
+## atomic_elem_term -> PL . elem_term PR [ VAR PR PL NEWLINE ]
+## atomic_type_term -> PL . VAR COLON VAR PR [ ARROW ]
+## atomic_type_term -> PL . atomic_type_term nonempty_list(imply_term) PR [ ARROW ]
+## lambda_term -> PL . VAR COLON VAR PR [ PR NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## PL 
+##
+
+Ill-formed lambda_term
+
+prog: LAMBDA VAR DOT PL VAR ARROW VAR PR VAR 
+##
+## Ends in an error in state: 39.
+##
+## lambda_term -> atomic_type_term . nonempty_list(imply_term) [ PR NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## atomic_type_term 
+##
+
+Ill-formed lambda_term
+
+prog: LAMBDA VAR DOT PL VAR COLON PR 
+##
+## Ends in an error in state: 11.
+##
+## atomic_type_term -> PL VAR COLON . VAR PR [ ARROW ]
+## lambda_term -> PL VAR COLON . VAR PR [ PR NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## PL VAR COLON 
+##
+
+Ill-formed lambda_term
+
+prog: LAMBDA VAR DOT PL VAR COLON VAR PR VAR 
+##
+## Ends in an error in state: 13.
+##
+## atomic_type_term -> PL VAR COLON VAR PR . [ ARROW ]
+## lambda_term -> PL VAR COLON VAR PR . [ PR NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## PL VAR COLON VAR PR 
+##
+
+Ill-formed lambda_term
+
+prog: LAMBDA VAR DOT PL VAR COLON VAR VAR 
+##
+## Ends in an error in state: 12.
+##
+## atomic_type_term -> PL VAR COLON VAR . PR [ ARROW ]
+## lambda_term -> PL VAR COLON VAR . PR [ PR NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## PL VAR COLON VAR 
+##
+
+Ill-formed lambda_term
+
+prog: LAMBDA VAR DOT PL VAR NEWLINE 
+##
+## Ends in an error in state: 10.
+##
+## atomic_elem_term -> VAR . [ VAR PR PL ]
+## atomic_type_term -> VAR . [ ARROW ]
+## atomic_type_term -> PL VAR . COLON VAR PR [ ARROW ]
+## lambda_term -> PL VAR . COLON VAR PR [ PR NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## PL VAR 
+##
+
+Ill-formed lambda_term
+
+prog: LAMBDA VAR DOT PR 
+##
+## Ends in an error in state: 7.
+##
+## elem_term -> LAMBDA VAR DOT . lambda_term [ PR NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## LAMBDA VAR DOT 
+##
+
+Ill-formed elem_term
+
+prog: LAMBDA VAR DOT VAR LAMBDA 
+##
+## Ends in an error in state: 8.
+##
+## atomic_elem_term -> VAR . [ VAR PR PL NEWLINE ]
+## atomic_type_term -> VAR . [ ARROW ]
+##
+## The known suffix of the stack is as follows:
+## VAR 
+##
+
+Ill-formed atomic term
+
+prog: LAMBDA VAR VAR 
+##
+## Ends in an error in state: 6.
+##
+## elem_term -> LAMBDA VAR . DOT lambda_term [ PR NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## LAMBDA VAR 
+##
+
+Ill-formed elem_term
+
+prog: NEWLINE VAR 
+##
+## Ends in an error in state: 49.
+##
+## list(NEWLINE) -> NEWLINE . list(NEWLINE) [ EOF ]
+##
+## The known suffix of the stack is as follows:
+## NEWLINE 
+##
+
+Ill-formed prog
+
+prog: PL PR 
+##
+## Ends in an error in state: 4.
+##
+## atomic_elem_term -> PL . elem_term PR [ VAR PR PL NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## PL 
+##
+
+Ill-formed atomic term
+
+prog: PL VAR LAMBDA 
+##
+## Ends in an error in state: 25.
+##
+## application -> atomic_elem_term . nonempty_list(atomic_elem_term) [ PR NEWLINE ]
+## elem_term -> atomic_elem_term . [ PR NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## atomic_elem_term 
+##
+
+Ill-formed elem term
+
+prog: PL VAR NEWLINE 
+##
+## Ends in an error in state: 19.
+##
+## atomic_elem_term -> PL elem_term . PR [ VAR PR PL NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## PL elem_term 
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 25, spurious reduction of production elem_term -> atomic_elem_term 
+##
+
+Ill-formed atomic_elem_term
+
+prog: PR 
+##
+## Ends in an error in state: 0.
+##
+## prog' -> . prog [ # ]
+##
+## The known suffix of the stack is as follows:
+## 
+##
+
+Unexcepted )
+
+prog: VAR COLON PL PL VAR ARROW VAR PR VAR 
+##
+## Ends in an error in state: 21.
+##
+## atomic_type_term -> PL atomic_type_term . nonempty_list(imply_term) PR [ PR NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## PL atomic_type_term 
+##
+
+Ill-formed atomic_type_term
+
+prog: VAR COLON PL PR 
+##
+## Ends in an error in state: 44.
+##
+## atomic_type_term -> PL . VAR COLON VAR PR [ NEWLINE ARROW ]
+## atomic_type_term -> PL . atomic_type_term nonempty_list(imply_term) PR [ NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## PL 
+##
+
+Ill-formed atomic_type_term
+
+prog: VAR COLON PL VAR ARROW VAR NEWLINE 
+##
+## Ends in an error in state: 33.
+##
+## atomic_type_term -> PL atomic_type_term nonempty_list(imply_term) . PR [ PR NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## PL atomic_type_term nonempty_list(imply_term) 
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 23, spurious reduction of production atomic_type_term -> VAR 
+## In state 30, spurious reduction of production imply_term -> ARROW atomic_type_term 
+## In state 35, spurious reduction of production nonempty_list(imply_term) -> imply_term 
+##
+
+Ill-formed atomic_type_term
+
+prog: VAR COLON PL VAR COLON PR 
+##
+## Ends in an error in state: 16.
+##
+## atomic_type_term -> PL VAR COLON . VAR PR [ PR NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## PL VAR COLON 
+##
+
+Ill-formed atomic_type_term
+
+prog: VAR COLON PL VAR COLON VAR VAR 
+##
+## Ends in an error in state: 17.
+##
+## atomic_type_term -> PL VAR COLON VAR . PR [ PR NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## PL VAR COLON VAR 
+##
+
+Ill-formed atomic_type_term
+
+prog: VAR COLON PL VAR VAR 
+##
+## Ends in an error in state: 45.
+##
+## atomic_type_term -> VAR . [ ARROW ]
+## atomic_type_term -> PL VAR . COLON VAR PR [ NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## PL VAR 
+##
+
+Ill-formed atomic_type_term
+
+prog: VAR COLON PR 
+##
+## Ends in an error in state: 42.
+##
+## type_define -> VAR COLON . type_term [ NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## VAR COLON 
+##
+
+Ill-formed type_define
+
+prog: VAR COLON VAR ARROW PL PR 
+##
+## Ends in an error in state: 24.
+##
+## atomic_elem_term -> PL . elem_term PR [ VAR PL ]
+## atomic_type_term -> PL . VAR COLON VAR PR [ PR NEWLINE ARROW ]
+## atomic_type_term -> PL . atomic_type_term nonempty_list(imply_term) PR [ PR NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## PL 
+##
+
+Ill-formed atomic term
+
+prog: VAR COLON VAR ARROW PL VAR ARROW VAR PR VAR 
+##
+## Ends in an error in state: 35.
+##
+## nonempty_list(imply_term) -> imply_term . [ PR NEWLINE ]
+## nonempty_list(imply_term) -> imply_term . nonempty_list(imply_term) [ PR NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## imply_term 
+##
+
+Ill-formed imply_term
+
+prog: VAR COLON VAR ARROW PL VAR PR PR 
+##
+## Ends in an error in state: 31.
+##
+## application -> atomic_elem_term . nonempty_list(atomic_elem_term) [ PR NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## atomic_elem_term 
+##
+
+Ill-formed application
+
+prog: VAR COLON VAR ARROW PR 
+##
+## Ends in an error in state: 22.
+##
+## imply_term -> ARROW . atomic_type_term [ PR NEWLINE ARROW ]
+## imply_term -> ARROW . application [ PR NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## ARROW 
+##
+
+Ill-formed imply_term
+
+prog: VAR COLON VAR ARROW VAR LAMBDA 
+##
+## Ends in an error in state: 23.
+##
+## atomic_elem_term -> VAR . [ VAR PL ]
+## atomic_type_term -> VAR . [ PR NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## VAR 
+##
+
+Ill-formed atomic term
+
+prog: VAR COLON VAR ARROW VAR PR 
+##
+## Ends in an error in state: 55.
+##
+## sent -> type_define . nonempty_list(NEWLINE) [ VAR PL LAMBDA EOF ]
+##
+## The known suffix of the stack is as follows:
+## type_define 
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 23, spurious reduction of production atomic_type_term -> VAR 
+## In state 30, spurious reduction of production imply_term -> ARROW atomic_type_term 
+## In state 35, spurious reduction of production nonempty_list(imply_term) -> imply_term 
+## In state 48, spurious reduction of production type_term -> atomic_type_term nonempty_list(imply_term) 
+## In state 46, spurious reduction of production type_define -> VAR COLON type_term 
+##
+
+Ill-formed sentence
+
+prog: VAR COLON VAR VAR 
+##
+## Ends in an error in state: 47.
+##
+## type_term -> atomic_type_term . [ NEWLINE ]
+## type_term -> atomic_type_term . nonempty_list(imply_term) [ NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## atomic_type_term 
+##
+
+Ill-formed type_term
+
+prog: VAR EQUAL PR 
+##
+## Ends in an error in state: 2.
+##
+## var_assign -> VAR EQUAL . elem_term [ NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## VAR EQUAL 
+##
+
+Ill-formed var_assign
+
+prog: VAR EQUAL VAR PR 
+##
+## Ends in an error in state: 51.
+##
+## sent -> var_assign . nonempty_list(NEWLINE) [ VAR PL LAMBDA EOF ]
+##
+## The known suffix of the stack is as follows:
+## var_assign 
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 25, spurious reduction of production elem_term -> atomic_elem_term 
+## In state 41, spurious reduction of production var_assign -> VAR EQUAL elem_term 
+##
+
+Ill-formed lambda expression
+
+prog: VAR NEWLINE PR 
+##
+## Ends in an error in state: 52.
+##
+## nonempty_list(NEWLINE) -> NEWLINE . [ VAR PL LAMBDA EOF ]
+## nonempty_list(NEWLINE) -> NEWLINE . nonempty_list(NEWLINE) [ VAR PL LAMBDA EOF ]
+##
+## The known suffix of the stack is as follows:
+## NEWLINE 
+##
+
+Ill-formed NEWLINE
+
+prog: VAR PR 
+##
+## Ends in an error in state: 1.
+##
+## atomic_elem_term -> VAR . [ VAR PL NEWLINE ]
+## type_define -> VAR . COLON type_term [ NEWLINE ]
+## var_assign -> VAR . EQUAL elem_term [ NEWLINE ]
+##
+## The known suffix of the stack is as follows:
+## VAR 
+##
+
+Ill-formed prog
+
+prog: VAR VAR LAMBDA 
+##
+## Ends in an error in state: 27.
+##
+## nonempty_list(atomic_elem_term) -> atomic_elem_term . [ PR NEWLINE ARROW ]
+## nonempty_list(atomic_elem_term) -> atomic_elem_term . nonempty_list(atomic_elem_term) [ PR NEWLINE ARROW ]
+##
+## The known suffix of the stack is as follows:
+## atomic_elem_term 
+##
+
+Ill-formed atomic_elem_term
+
+prog: VAR VAR PR 
+##
+## Ends in an error in state: 59.
+##
+## sent -> elem_term . nonempty_list(NEWLINE) [ VAR PL LAMBDA EOF ]
+##
+## The known suffix of the stack is as follows:
+## elem_term 
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production nonempty_list(atomic_elem_term) -> atomic_elem_term 
+## In state 26, spurious reduction of production application -> atomic_elem_term nonempty_list(atomic_elem_term) 
+## In state 29, spurious reduction of production elem_term -> application 
+##
+
+Ill-formed sentence
+
