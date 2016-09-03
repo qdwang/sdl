@@ -1,4 +1,4 @@
-PKG menhirLib
+PKG ppx_deriving menhirLib
 
 S ./
 S ./libparser
