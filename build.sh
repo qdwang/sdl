@@ -10,7 +10,6 @@ fi
 ocamlbuild \
     -use-ocamlfind \
     -pkg str \
-    -pkg core \
     -pkg ppx_deriving.std \
     -pkg menhirLib \
     -tag thread \

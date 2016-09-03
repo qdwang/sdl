@@ -1,10 +1,9 @@
-open Core.Std
 open Libparser.Lexer
 open Lexing
 open Libparser.Parser.MenhirInterpreter
 
 let prepare content =
-  (String.strip content) ^ "\n"
+  (String.trim content) ^ "\n"
   
 
 (* for incremental parsing *)
@@ -44,7 +43,7 @@ let parse content succeed =
   let checkpoint = Libparser.Parser.Incremental.prog lexbuf.lex_curr_p  
   and supplier = lexer_lexbuf_to_supplier Libparser.Lexer.read lexbuf
   and fail checkpoint =
-    let lines_of_colnum = List.map (Str.split (Str.regexp "[\n\r]") prepared_content) ~f:(fun x -> 1 + String.length x) in
+    let lines_of_colnum = List.map (fun x -> 1 + String.length x) (Str.split (Str.regexp "[\n\r]") prepared_content) in
     let (lnum, cnum) = calc_pos lines_of_colnum lexbuf.lex_curr_p.pos_cnum in
     print_endline ("Parsing Error @ line:" ^ string_of_int lnum ^ " column:" ^ string_of_int cnum);
     print_endline (Libparser.Sdl.message (state checkpoint))

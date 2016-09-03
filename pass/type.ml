@@ -1,8 +1,7 @@
 open Libparser.Sdl
-open Core.Std
 
 let debug_print lst =
-  print_endline ("\n" ^ (List.fold ~init:"" ~f:(fun a b -> a ^ "::" ^ b) lst))
+  print_endline ("\n" ^ (List.fold_left (fun a b -> a ^ "::" ^ b) "" lst))
 
 type env = {
   root: (env * int) option;
@@ -21,10 +20,10 @@ let list_split (lst : 'a list) (pos_to_top : int) =
   split [] lst pos_to_top  
 
 let rec find_in_env (var : string) (env : env) (pos_to_bottom : int option) = 
-  let result = List.find (match pos_to_bottom with 
+  let result = try Some (List.find (fun (s, _) -> s = var) (match pos_to_bottom with 
       | None -> env.stack  
       | Some pos -> let (_, lst2) = list_split env.stack (List.length env.stack - pos) in lst2
-    ) ~f:(fun (s, _) -> s = var)
+  )) with | Not_found -> None
   in
   match (result, env.root) with
   | None, Some (root_env, root_pos) -> find_in_env var root_env (Some root_pos) 
@@ -46,7 +45,7 @@ let rec type_check (t1 : t) (t2 : t) : bool =
   | Imply lst1, Imply lst2 -> 
     let (len1, len2) = List.length lst1, List.length lst2 in
     if len1 = len2 then
-      not (List.exists (List.map (zip lst1 lst2) ~f:(fun (x, y) -> type_check x y)) ~f:(fun x -> not x))
+      not (List.exists (fun x -> not x) (List.map (fun (x, y) -> type_check x y) (zip lst1 lst2)))
     else
       false
   | _ -> false
@@ -60,12 +59,12 @@ let rec replace_type (env : env) (t : t) : t =
   match t with
   | IsType (v, "") -> find v 
   | OfType x -> find x
-  | Imply lst -> Imply (List.map lst ~f:(replace_type env))
+  | Imply lst -> Imply (List.map (replace_type env) lst)
   | _ -> t
 
 let type_apply (fn_t : t) (args_t : t list) (current_env : env) : t =
   let type_env = {root = None; stack = []} in
-  let args_t_replaced = List.map args_t ~f:(replace_type current_env) in
+  let args_t_replaced = List.map (replace_type current_env) args_t in
   let rec apply (fn : t) (args : t list) : t =
     match fn, args with
     | Imply (fn_hd :: fn_tl), args_hd :: args_tl ->
@@ -74,7 +73,7 @@ let type_apply (fn_t : t) (args_t : t list) (current_env : env) : t =
             | IsType (v, _) -> 
               type_env.stack <- (v, args_hd) :: type_env.stack
             | _ -> ());
-         apply (Imply (List.map fn_tl ~f:(replace_type type_env))) args_tl)
+         apply (Imply (List.map (replace_type type_env) fn_tl)) args_tl)
       else
         IsType (show fn_hd ^ " && " ^ show args_hd, "ERROR")
     | _ -> fn
@@ -84,7 +83,7 @@ let type_apply (fn_t : t) (args_t : t list) (current_env : env) : t =
 let rec flatten_t (t : t) =
   match t with
   | Imply l -> 
-    let lst = List.map l ~f:flatten_t in
+    let lst = List.map flatten_t l in
     Imply (match List.rev lst with
         | Imply tl :: hd ->
           List.rev hd @ tl
@@ -136,7 +135,7 @@ let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t 
     let (t1, t2) = info.raw in
     let current_env = {root = Some (current_env, List.length current_env.stack); stack = []} in 
     let t_t1 = infer_type current_env t1 in
-    let t_t2 = List.map t2 ~f:(infer_type current_env) in
+    let t_t2 = List.map (infer_type current_env) t2 in
     info.t <- flatten_t (Imply (t_t1 :: t_t2));
     info.t
   | `Lambda info ->
@@ -166,7 +165,7 @@ let rec infer_type ?(assign_t : t option) (current_env : env) (tree : term) : t 
     let t_t2 = match t_t1 with
       | Imply lst -> 
         let (t_t1_lst1, _) = list_split lst (List.length t2) in
-        List.map (zip t_t1_lst1 t2) ~f:(fun (t1, t2) -> infer_type current_env t2 ~assign_t:t1)
+        List.map (fun (t1, t2) -> infer_type current_env t2 ~assign_t:t1) (zip t_t1_lst1 t2)
       | _ -> [] 
     in
     info.t <- type_apply t_t1 t_t2 current_env;

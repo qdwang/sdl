@@ -1,7 +1,12 @@
 # sdl
 simple dependent-type language
 
-How to build
+### Requirement
+- OCaml 4.02+
+- Menhir
+- Ppx_deriving
+
+### How to build
 `./build.sh [--parser] main.byte`
 
 The `--parser` argument is optional.
