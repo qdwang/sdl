@@ -11,15 +11,31 @@ let read_file f =
   
   with e ->                      
     close_in_noerr ic;           
-    raise e     
+    raise e
 
-let run_parsing_test () =
-  let sample = read_file "test/sample.sdl" in
+type arg = 
+  | Test of string
+  | Run of string
+  | DoNothing
+
+let get_cmd_arg () : arg =
+  match Sys.argv with
+  | [|_; "--test"; x|] -> Test x
+  | [|_; path|] -> Run path
+  | _ -> DoNothing
+
+let run_parsing_test file =
+  let sample = read_file file in
   Test_parser.test sample
 
-let run_type_infer () =
-  let sample = read_file "test/sample.sdl" in
+let run_type_infer file =
+  let sample = read_file file in
   Test_type_infer.test sample
 
 let () =
-  run_type_infer ()
+  match get_cmd_arg () with
+    | Test arg -> 
+        run_type_infer ("test/" ^ arg ^ ".sdl")
+    | Run path ->
+        run_type_infer path
+    | DoNothing -> ()
