@@ -14,11 +14,11 @@ let read_file f =
     raise e     
 
 let run_parsing_test () =
-  let sample = read_file "test/sample_parser.sdl" in
+  let sample = read_file "test/sample.sdl" in
   Test_parser.test sample
 
 let run_type_infer () =
-  let sample = read_file "test/sample_parser.sdl" in
+  let sample = read_file "test/sample.sdl" in
   Test_type_infer.test sample
 
 let () =

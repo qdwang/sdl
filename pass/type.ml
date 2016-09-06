@@ -64,6 +64,7 @@ let rec replace_type (env : env) (t : t) : t =
 
 let type_apply (fn_t : t) (args_t : t list) (current_env : env) : t =
   let type_env = {root = None; stack = []} in
+  let fn_t_replaced = replace_type current_env fn_t in
   let args_t_replaced = List.map (replace_type current_env) args_t in
   let rec apply (fn : t) (args : t list) : t =
     match fn, args with
@@ -78,7 +79,7 @@ let type_apply (fn_t : t) (args_t : t list) (current_env : env) : t =
         IsType (show fn_hd ^ " && " ^ show args_hd, "ERROR")
     | _ -> fn
   in
-  replace_type type_env (apply fn_t args_t_replaced)
+  replace_type type_env (apply fn_t_replaced args_t_replaced)
 
 let rec flatten_t (t : t) =
   match t with

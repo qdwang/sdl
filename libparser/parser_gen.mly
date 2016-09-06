@@ -33,6 +33,9 @@ type_term:
 
 atomic_type_term:
   | t = VAR  { `Type (Sdl.gen_info t) }
+  | t = atomic_complex_type_term { t }
+
+atomic_complex_type_term:
   | PL; v = VAR; COLON; t = VAR; PR    { `TypeWithVar (Sdl.gen_info (v, t)) }
   | PL; t1 = atomic_type_term; t2 = imply_term+; PR   { `TypeImply (Sdl.gen_info (t1, t2)) }
 
@@ -41,7 +44,7 @@ imply_term:
   | ARROW; t = application  { t }
 
 application:
-  | t1 = atomic_elem_term; t2 = atomic_elem_term+ { `Application (Sdl.gen_info (t1, t2)) }
+  | t1 = atomic_elem_term; t2 = atomic_term+ { `Application (Sdl.gen_info (t1, t2)) }
 
 elem_term:
   | t = atomic_elem_term { t }
@@ -57,3 +60,7 @@ lambda_term:
 atomic_elem_term:
   | s = VAR { `Var (Sdl.gen_info s) }
   | PL;  t = elem_term;  PR { t }
+
+atomic_term:
+  | t = atomic_elem_term { t }
+  | t = atomic_complex_type_term { t }
