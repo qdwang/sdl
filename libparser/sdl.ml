@@ -31,79 +31,78 @@ type term = [
 let message =
   fun s ->
     match s with
-    | 59 ->
-        "Ill-formed sentence\n"
+    | 61 ->
+        "Unexcepted token `elem_term`\n"
     | 27 ->
-        "Ill-formed atomic_elem_term\n"
+        "Unexcepted token `atomic_term`\n"
     | 1 ->
-        "Ill-formed prog\n"
-    | 52 ->
-        "Ill-formed NEWLINE\n"
-    | 51 ->
-        "Ill-formed lambda expression\n"
-    | 2 ->
-        "Ill-formed var_assign\n"
-    | 47 ->
-        "Ill-formed type_term\n"
-    | 55 ->
-        "Ill-formed sentence\n"
-    | 23 ->
-        "Ill-formed atomic term\n"
-    | 22 ->
-        "Ill-formed imply_term\n"
-    | 31 ->
-        "Ill-formed application\n"
-    | 35 ->
-        "Ill-formed imply_term\n"
-    | 24 ->
-        "Ill-formed atomic term\n"
-    | 42 ->
-        "Ill-formed type_define\n"
-    | 45 ->
-        "Ill-formed atomic_type_term\n"
-    | 17 ->
-        "Ill-formed atomic_type_term\n"
-    | 16 ->
-        "Ill-formed atomic_type_term\n"
-    | 33 ->
-        "Ill-formed atomic_type_term\n"
-    | 44 ->
-        "Ill-formed atomic_type_term\n"
-    | 21 ->
-        "Ill-formed atomic_type_term\n"
-    | 0 ->
-        "Unexcepted )\n"
-    | 19 ->
-        "Ill-formed atomic_elem_term\n"
-    | 25 ->
-        "Ill-formed elem term\n"
-    | 4 ->
-        "Ill-formed atomic term\n"
-    | 49 ->
-        "Ill-formed prog\n"
-    | 6 ->
-        "Ill-formed elem_term\n"
-    | 8 ->
-        "Ill-formed atomic term\n"
-    | 7 ->
-        "Ill-formed elem_term\n"
-    | 10 ->
-        "Ill-formed lambda_term\n"
-    | 12 ->
-        "Ill-formed lambda_term\n"
-    | 13 ->
-        "Ill-formed lambda_term\n"
-    | 11 ->
-        "Ill-formed lambda_term\n"
-    | 39 ->
-        "Ill-formed lambda_term\n"
-    | 9 ->
-        "Ill-formed lambda_term\n"
+        "Unexcepted token `VAR`\n"
     | 15 ->
-        "Ill-formed atomic term\n"
+        "Unexcepted token `PL VAR`\n"
+    | 17 ->
+        "Unexcepted token `PL VAR COLON VAR `\n"
+    | 16 ->
+        "Unexcepted token `PL VAR COLON`\n"
+    | 33 ->
+        "Unexcepted token `PL atomic_type_term nonempty_list(imply_term) `\n"
     | 14 ->
-        "Ill-formed atomic_type_term\n"
+        "Unexcepted token `PL`\n"
+    | 21 ->
+        "Unexcepted token `PL atomic_type_term`\n"
+    | 54 ->
+        "Unexcepted token `NEWLINE`\n"
+    | 53 ->
+        "Unexcepted token `var_assign`\n"
+    | 2 ->
+        "Unexcepted token `VAR EQUAL`\n"
+    | 49 ->
+        "Unexcepted token `atomic_type_term`\n"
+    | 57 ->
+        "Unexcepted token `type_define`\n"
+    | 23 ->
+        "Unexcepted token `VAR`\n"
+    | 22 ->
+        "Unexcepted token `ARROW`\n"
+    | 25 ->
+        "Unexcepted token `atomic_elem_term `\n"
+    | 35 ->
+        "Unexcepted token `imply_term`\n"
+    | 44 ->
+        "Unexcepted token `VAR COLON`\n"
+    | 47 ->
+        "Unexcepted token `PL VAR`\n"
+    | 46 ->
+        "Unexcepted token `PL`\n"
+    | 0 ->
+        "Unexcepted token `prog`\n"
+    | 19 ->
+        "Unexcepted token `PL elem_term`\n"
+    | 37 ->
+        "Unexcepted token `atomic_elem_term `\n"
+    | 4 ->
+        "Unexcepted token `PL`\n"
+    | 51 ->
+        "Unexcepted token `NEWLINE`\n"
+    | 6 ->
+        "Unexcepted token `LAMBDA VAR`\n"
+    | 8 ->
+        "Unexcepted token `VAR`\n"
+    | 7 ->
+        "Unexcepted token `LAMBDA VAR DOT`\n"
+    | 10 ->
+        "Unexcepted token `PL VAR`\n"
+    | 12 ->
+        "Unexcepted token `PL VAR COLON VAR `\n"
+    | 13 ->
+        "Unexcepted token `PL VAR COLON VAR PR`\n"
+    | 11 ->
+        "Unexcepted token `PL VAR COLON`\n"
+    | 41 ->
+        "Unexcepted token `atomic_type_term `\n"
+    | 9 ->
+        "Unexcepted token `PL`\n"
     | 5 ->
-        "Ill-formed elem_term\n"
+        "Unexcepted token `LAMBDA`\n"
     | _ ->
         raise Not_found
+
