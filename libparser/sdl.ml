@@ -1,5 +1,5 @@
 type t = 
-  | Unit
+  | UnTyped
   | IsType of string * string
   | OfType of string
   | Imply of t list 
@@ -17,7 +17,7 @@ type 'a info = {
 let gen_info s pos = {
   raw = s;
   pos = pos;
-  t = Unit;
+  t = UnTyped;
 }
 
 type term = [

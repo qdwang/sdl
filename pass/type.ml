@@ -9,6 +9,8 @@ type env = {
 }
 [@@deriving yojson]
 
+exception TypeError of t * t * string
+
 let list_split (lst : 'a list) (pos_to_top : int) =
   let rec split lst1 lst2 p =
     if p <= 0 then 
@@ -76,7 +78,7 @@ let type_apply (fn_t : t) (args_t : t list) (current_env : env) : t =
             | _ -> ());
          apply (Imply (List.map (replace_type type_env) fn_tl)) args_tl)
       else
-        IsType (Yojson.Safe.to_string (to_yojson fn_hd) ^ " && " ^ Yojson.Safe.to_string (to_yojson args_hd), "ERROR")
+        raise (TypeError (fn_hd, args_hd, "Type Mismatch"))
     | _ -> fn
   in
   replace_type type_env (apply fn_t_replaced args_t_replaced)
@@ -93,81 +95,101 @@ let rec flatten_t (t : t) =
 
 let global_env = {root = None; stack = []}
 
-let rec type_check ?(assign_t : t option) (current_env : env) (tree : term) : t =
-  match tree with
-  | `Type info -> 
-    info.t <- IsType (info.raw, if info.raw = "Type" then "Type" else "");
-    info.t
-  | `Var info -> 
-    let result = find_in_env info.raw current_env None in
-    (match result with
-     | None -> info.t <- Unit
-     | Some (_, t) -> info.t <- t);
-    info.t
-  | `VarAssign info ->
-    let (var, t) = info.raw in
-    let var_type = match find_in_env var current_env None with
-      | None -> Unit 
-      | Some (_, t) -> t 
-    in
-    info.t <- type_check current_env t ~assign_t:var_type;
-    (match var_type with
-     | Imply lst ->
-       (match List.rev lst with
-        | [] -> ()
-        | hd :: _ -> 
-          if hd = IsType ("Type", "Type") then 
-            current_env.stack <- (var, info.t) :: current_env.stack
-          else
-            ())
-     | _ -> ());
-    info.t
-  | `TypeDefine info ->
-    let (var, t) = info.raw in
-    info.t <- type_check current_env t;
-    current_env.stack <- (var, info.t) :: current_env.stack;
-    info.t
-  | `TypeWithVar info ->
-    let (var, t) = info.raw in
-    info.t <- IsType (var, t);
-    current_env.stack <- (var, info.t) :: current_env.stack;
-    info.t
-  | `TypeImply info ->
-    let (t1, t2) = info.raw in
-    let current_env = {root = Some (current_env, List.length current_env.stack); stack = []} in 
-    let t_t1 = type_check current_env t1 in
-    let t_t2 = List.map (type_check current_env) t2 in
-    info.t <- flatten_t (Imply (t_t1 :: t_t2));
-    info.t
-  | `Lambda info ->
-    let (var, t) = info.raw in
-    let current_env = {root = Some (current_env, List.length current_env.stack); stack = []} in
-    let assigned_type = match assign_t with | None -> Unit | Some t -> t in 
-    let (assigned_hd, assigned_tl) = match assigned_type with 
-      | Imply (hd :: tl) -> ((match hd with 
-          | IsType (v, t) -> if t = "Type" then IsType (var, t) else OfType v
-          | x -> x), Imply tl) 
-      | _ -> (Unit, Unit) in
-    current_env.stack <- (var, assigned_hd) :: current_env.stack;
-    let body_t = type_check current_env t ~assign_t:assigned_tl in
-    info.t <- (match body_t with 
-        | Unit -> Imply [assigned_hd; Unit]
-        | IsType (x, y) -> Imply [assigned_hd; IsType (x, y)]
-        | OfType x -> Imply [assigned_hd; OfType x]
-        | Imply lst -> Imply (assigned_hd :: lst));
-    info.t
-  | `Application info ->
-    let (t1, t2) = info.raw in
-    let assigned_type = match assign_t with | None -> Unit | Some t -> t in 
-    let assigned_hd = match assigned_type with 
-      | Imply (hd :: _) -> hd
-      | _ -> Unit in
-    let t_t1 = type_check current_env t1 ~assign_t:assigned_hd in
-    let t_t2 = match t_t1 with
-      | Imply lst -> 
-        let (t_t1_lst1, _) = list_split lst (List.length t2) in
-        List.map (fun (t1, t2) -> type_check current_env t2 ~assign_t:t1) (zip t_t1_lst1 t2)
-      | _ -> [] 
-    in
-    info.t <- type_apply t_t1 t_t2 current_env;
-    info.t
+let type_check (env : env) (tree : term) lines_of_colnum : t =
+  let rec infer_and_check ?(assign_t : t option) (current_env : env) (tree : term) : t =
+    let ref_char_pos = ref 0 in
+    try
+      match tree with
+      | `Type info -> 
+        ref_char_pos := info.pos;
+        info.t <- IsType (info.raw, if info.raw = "Type" then "Type" else "");
+        info.t
+      | `Var info -> 
+        ref_char_pos := info.pos;
+        let result = find_in_env info.raw current_env None in
+        (match result with
+        | None -> info.t <- UnTyped
+        | Some (_, t) -> info.t <- t);
+        info.t
+      | `VarAssign info ->
+        ref_char_pos := info.pos;
+        let (var, t) = info.raw in
+        let var_type = match find_in_env var current_env None with
+          | None -> UnTyped 
+          | Some (_, t) -> t 
+        in
+        info.t <- infer_and_check current_env t ~assign_t:var_type;
+        (match var_type with
+        | Imply lst ->
+          (match List.rev lst with
+            | [] -> ()
+            | hd :: _ -> 
+              if hd = IsType ("Type", "Type") then 
+                current_env.stack <- (var, info.t) :: current_env.stack
+              else
+                ())
+        | _ -> ());
+        info.t
+      | `TypeDefine info ->
+        ref_char_pos := info.pos;
+        let (var, t) = info.raw in
+        info.t <- infer_and_check current_env t;
+        current_env.stack <- (var, info.t) :: current_env.stack;
+        info.t
+      | `TypeWithVar info ->
+        ref_char_pos := info.pos;
+        let (var, t) = info.raw in
+        info.t <- IsType (var, t);
+        current_env.stack <- (var, info.t) :: current_env.stack;
+        info.t
+      | `TypeImply info ->
+        ref_char_pos := info.pos;
+        let (t1, t2) = info.raw in
+        let current_env = {root = Some (current_env, List.length current_env.stack); stack = []} in 
+        let t_t1 = infer_and_check current_env t1 in
+        let t_t2 = List.map (infer_and_check current_env) t2 in
+        info.t <- flatten_t (Imply (t_t1 :: t_t2));
+        info.t
+      | `Lambda info ->
+        ref_char_pos := info.pos;
+        let (var, t) = info.raw in
+        let current_env = {root = Some (current_env, List.length current_env.stack); stack = []} in
+        let assigned_type = match assign_t with | None -> UnTyped | Some t -> t in 
+        let (assigned_hd, assigned_tl) = match assigned_type with 
+          | Imply (hd :: tl) -> ((match hd with 
+              | IsType (v, t) -> if t = "Type" then IsType (var, t) else OfType v
+              | x -> x), Imply tl) 
+          | _ -> (UnTyped, UnTyped) in
+        current_env.stack <- (var, assigned_hd) :: current_env.stack;
+        let body_t = infer_and_check current_env t ~assign_t:assigned_tl in
+        info.t <- (match body_t with 
+            | UnTyped -> Imply [assigned_hd; UnTyped]
+            | IsType (x, y) -> Imply [assigned_hd; IsType (x, y)]
+            | OfType x -> Imply [assigned_hd; OfType x]
+            | Imply lst -> Imply (assigned_hd :: lst));
+        info.t
+      | `Application info ->
+        ref_char_pos := info.pos;
+        let (t1, t2) = info.raw in
+        let assigned_type = match assign_t with | None -> UnTyped | Some t -> t in 
+        let assigned_hd = match assigned_type with 
+          | Imply (hd :: _) -> hd
+          | _ -> UnTyped in
+        let t_t1 = infer_and_check current_env t1 ~assign_t:assigned_hd in
+        let t_t2 = match t_t1 with
+          | Imply lst -> 
+            let (t_t1_lst1, _) = list_split lst (List.length t2) in
+            List.map (fun (t1, t2) -> infer_and_check current_env t2 ~assign_t:t1) (zip t_t1_lst1 t2)
+          | _ -> [] 
+        in
+        info.t <- type_apply t_t1 t_t2 current_env;
+        info.t
+      with
+        | TypeError (t1, t2, error_str) ->
+          let (lnum, cnum) = Parse.calc_pos lines_of_colnum !ref_char_pos in
+          print_endline (error_str ^ " @ line:" ^ string_of_int lnum ^ " column:" ^ string_of_int cnum);
+          print_endline (Yojson.Safe.to_string (to_yojson t1));
+          print_endline (Yojson.Safe.to_string (to_yojson t2));
+          raise (Failure "TypeError")
+  in
+  infer_and_check env tree
