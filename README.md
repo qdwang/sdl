@@ -18,7 +18,7 @@ simple dependent-type language
 ./build.sh
 ```
 
-- Build the native code
+- Build to native code
 ```
 ./build.sh --native
 ```
