@@ -3,8 +3,8 @@ simple dependent-type language
 
 ### Requirement
 - OCaml 4.02+
-- Menhir
-- Ppx_deriving
+- menhir
+- ppx_deriving_yojson
 
 ### How to build
 
