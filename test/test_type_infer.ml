@@ -5,7 +5,7 @@ let test sample =
     match result with
     | Some v ->
       List.iter (fun x -> 
-          let _ = Pass.Type.infer_type Pass.Type.global_env x in
+          let _ = Pass.Type.type_check Pass.Type.global_env x in
           Format.pp_print_newline fmt ();
           Format.pp_print_newline fmt ();
           Libparser.Sdl.pp_term fmt x) v
