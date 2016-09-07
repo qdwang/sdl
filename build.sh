@@ -25,7 +25,7 @@ then
     ocamlbuild \
         -use-ocamlfind \
         -pkg str \
-        -pkg ppx_deriving.std \
+        -pkg ppx_deriving_yojson \
         -pkg menhirLib \
         -tag thread \
         -tag debug \

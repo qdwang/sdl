@@ -1,4 +1,4 @@
-PKG ppx_deriving menhirLib
+PKG ppx_deriving_yojson menhirLib
 
 S ./
 S ./libparser

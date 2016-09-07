@@ -2,7 +2,7 @@
 (* This generated code requires the following version of MenhirLib: *)
 
 let () =
-  MenhirLib.StaticVersion.require_20160526
+  MenhirLib.StaticVersion.require_20160808
 
 module Basics = struct
   
@@ -29,7 +29,7 @@ end
 include Basics
 
 let _eRR =
-  Error
+  Basics.Error
 
 module Tables = struct
   
@@ -127,7 +127,7 @@ module Tables = struct
         let _endpos = _endpos_t2_ in
         let _v : 'tv_application = 
 # 47 "./libparser/parser_gen.mly"
-                                             ( `Application (Sdl.gen_info (t1, t2)) )
+                                             ( `Application (Sdl.gen_info (t1, t2) _startpos_t1_.pos_cnum) )
 # 132 "./libparser/parser.ml"
          in
         {
@@ -184,7 +184,7 @@ module Tables = struct
         let _endpos = _endpos__5_ in
         let _v : 'tv_atomic_complex_type_term = 
 # 39 "./libparser/parser_gen.mly"
-                                       ( `TypeWithVar (Sdl.gen_info (v, t)) )
+                                       ( `TypeWithVar (Sdl.gen_info (v, t) _startpos_v_.pos_cnum) )
 # 189 "./libparser/parser.ml"
          in
         {
@@ -227,7 +227,7 @@ module Tables = struct
         let _endpos = _endpos__4_ in
         let _v : 'tv_atomic_complex_type_term = 
 # 40 "./libparser/parser_gen.mly"
-                                                      ( `TypeImply (Sdl.gen_info (t1, t2)) )
+                                                      ( `TypeImply (Sdl.gen_info (t1, t2) _startpos_t1_.pos_cnum) )
 # 232 "./libparser/parser.ml"
          in
         {
@@ -256,7 +256,7 @@ module Tables = struct
         let _endpos = _endpos_s_ in
         let _v : 'tv_atomic_elem_term = 
 # 61 "./libparser/parser_gen.mly"
-            ( `Var (Sdl.gen_info s) )
+            ( `Var (Sdl.gen_info s _startpos_s_.pos_cnum) )
 # 261 "./libparser/parser.ml"
          in
         {
@@ -372,7 +372,7 @@ module Tables = struct
         let _endpos = _endpos_t_ in
         let _v : 'tv_atomic_type_term = 
 # 35 "./libparser/parser_gen.mly"
-             ( `Type (Sdl.gen_info t) )
+             ( `Type (Sdl.gen_info t _startpos_t_.pos_cnum) )
 # 377 "./libparser/parser.ml"
          in
         {
@@ -469,7 +469,7 @@ module Tables = struct
         let _endpos = _endpos_t_ in
         let _v : 'tv_elem_term = 
 # 51 "./libparser/parser_gen.mly"
-                                           ( `Lambda (Sdl.gen_info (s, t)) )
+                                           ( `Lambda (Sdl.gen_info (s, t) _startpos_s_.pos_cnum) )
 # 474 "./libparser/parser.ml"
          in
         {
@@ -638,7 +638,7 @@ module Tables = struct
         let _endpos = _endpos__5_ in
         let _v : 'tv_lambda_term = 
 # 57 "./libparser/parser_gen.mly"
-                                       ( `TypeWithVar (Sdl.gen_info (v, t)) )
+                                       ( `TypeWithVar (Sdl.gen_info (v, t) _startpos_v_.pos_cnum) )
 # 643 "./libparser/parser.ml"
          in
         {
@@ -669,7 +669,7 @@ module Tables = struct
         let _endpos = _endpos_t2_ in
         let _v : 'tv_lambda_term = 
 # 58 "./libparser/parser_gen.mly"
-                                              ( `TypeImply (Sdl.gen_info (t1, t2)) )
+                                              ( `TypeImply (Sdl.gen_info (t1, t2) _startpos_t1_.pos_cnum) )
 # 674 "./libparser/parser.ml"
          in
         {
@@ -1146,7 +1146,7 @@ module Tables = struct
         let _endpos = _endpos_t_ in
         let _v : 'tv_type_define = 
 # 28 "./libparser/parser_gen.mly"
-                                     ( `TypeDefine (Sdl.gen_info (v, t)) )
+                                     ( `TypeDefine (Sdl.gen_info (v, t) _startpos_v_.pos_cnum) )
 # 1151 "./libparser/parser.ml"
          in
         {
@@ -1202,7 +1202,7 @@ module Tables = struct
         let _endpos = _endpos_t2_ in
         let _v : 'tv_type_term = 
 # 32 "./libparser/parser_gen.mly"
-                                              ( `TypeImply (Sdl.gen_info (t1, t2)) )
+                                              ( `TypeImply (Sdl.gen_info (t1, t2) _startpos_t1_.pos_cnum) )
 # 1207 "./libparser/parser.ml"
          in
         {
@@ -1243,7 +1243,7 @@ module Tables = struct
         let _endpos = _endpos_t_ in
         let _v : 'tv_var_assign = 
 # 25 "./libparser/parser_gen.mly"
-                                     ( `VarAssign (Sdl.gen_info (v, t)) )
+                                     ( `VarAssign (Sdl.gen_info (v, t) _startpos_v_.pos_cnum) )
 # 1248 "./libparser/parser.ml"
          in
         {

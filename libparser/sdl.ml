@@ -3,16 +3,20 @@ type t =
   | IsType of string * string
   | OfType of string
   | Imply of t list 
-[@@deriving show]
+[@@deriving yojson]
+
+(*type pos = [%import: Lexing.position] [@@deriving yojson]*)
 
 type 'a info = {
   raw: 'a;
+  pos: int;
   mutable t: t;
 }  
-[@@deriving show]
+[@@deriving yojson]
 
-let gen_info s = {
+let gen_info s pos = {
   raw = s;
+  pos = pos;
   t = Unit;
 }
 
@@ -26,7 +30,7 @@ type term = [
   | `Lambda of (string * term) info
   | `Application of (term * (term list)) info
 ]  
-[@@deriving show]
+[@@deriving yojson]
 
 let message =
   fun s ->

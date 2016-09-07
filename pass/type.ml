@@ -7,7 +7,7 @@ type env = {
   root: (env * int) option;
   mutable stack: (string * t) list;
 }
-[@@deriving show]
+[@@deriving yojson]
 
 let list_split (lst : 'a list) (pos_to_top : int) =
   let rec split lst1 lst2 p =
@@ -76,7 +76,7 @@ let type_apply (fn_t : t) (args_t : t list) (current_env : env) : t =
             | _ -> ());
          apply (Imply (List.map (replace_type type_env) fn_tl)) args_tl)
       else
-        IsType (show fn_hd ^ " && " ^ show args_hd, "ERROR")
+        IsType (Yojson.Safe.to_string (to_yojson fn_hd) ^ " && " ^ Yojson.Safe.to_string (to_yojson args_hd), "ERROR")
     | _ -> fn
   in
   replace_type type_env (apply fn_t_replaced args_t_replaced)
