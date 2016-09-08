@@ -1,8 +1,8 @@
 type t = 
-  | UnTyped
-  | IsType of string * string
-  | OfType of string
-  | Imply of t list 
+  | UnTyped 
+  | IsType of string * string [@name "IsType/"]
+  | OfType of string [@name "OfType/"]
+  | Imply of t list [@name "Imply/"]
 [@@deriving yojson]
 
 (*type pos = [%import: Lexing.position] [@@deriving yojson]*)

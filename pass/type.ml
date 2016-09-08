@@ -10,6 +10,7 @@ type env = {
 [@@deriving yojson]
 
 exception TypeError of t * t * string
+exception Undefined of string
 
 let list_split (lst : 'a list) (pos_to_top : int) =
   let rec split lst1 lst2 p =
@@ -30,7 +31,9 @@ let rec find_in_env (var : string) (env : env) (pos_to_bottom : int option) =
   match (result, env.root) with
   | None, Some (root_env, root_pos) -> find_in_env var root_env (Some root_pos) 
   | Some v, _ -> Some v
-  | None, None -> None
+  | None, None -> 
+    print_endline (var ^ " " ^ (Yojson.Safe.to_string (env_to_yojson env)));
+    raise (Undefined var)
 
 let rec zip lst1 lst2 =
   match lst1, lst2 with
@@ -98,6 +101,10 @@ let global_env = {root = None; stack = []}
 let type_check (env : env) (tree : term) lines_of_colnum : t =
   let rec infer_and_check ?(assign_t : t option) (current_env : env) (tree : term) : t =
     let ref_char_pos = ref 0 in
+    let print_error error_str =
+      let (lnum, cnum) = Parse.calc_pos lines_of_colnum !ref_char_pos in
+      print_endline (error_str ^ " @ line:" ^ string_of_int lnum ^ " column:" ^ string_of_int cnum)
+    in
     try
       match tree with
       | `Type info -> 
@@ -184,12 +191,17 @@ let type_check (env : env) (tree : term) lines_of_colnum : t =
         in
         info.t <- type_apply t_t1 t_t2 current_env;
         info.t
+
+        
       with
         | TypeError (t1, t2, error_str) ->
-          let (lnum, cnum) = Parse.calc_pos lines_of_colnum !ref_char_pos in
-          print_endline (error_str ^ " @ line:" ^ string_of_int lnum ^ " column:" ^ string_of_int cnum);
-          print_endline (Yojson.Safe.to_string (to_yojson t1));
-          print_endline (Yojson.Safe.to_string (to_yojson t2));
+          print_error error_str;
+          print_endline ("Function Type: " ^ (Yojson.Safe.to_string (to_yojson t1)));
+          print_endline ("Arguments Type: " ^ (Yojson.Safe.to_string (to_yojson t2)));
           raise (Failure "TypeError")
+        | Undefined var ->
+          print_error ("Undefined: "  ^ var);
+          raise (Failure "Undefined")
+          
   in
   infer_and_check env tree
