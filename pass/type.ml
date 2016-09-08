@@ -9,6 +9,8 @@ type env = {
 }
 [@@deriving yojson]
 
+let const_type = "Type";
+
 exception TypeError of t * t * string
 exception Undefined of string
 
@@ -32,7 +34,6 @@ let rec find_in_env (var : string) (env : env) (pos_to_bottom : int option) =
   | None, Some (root_env, root_pos) -> find_in_env var root_env (Some root_pos) 
   | Some v, _ -> Some v
   | None, None -> 
-    print_endline (var ^ " " ^ (Yojson.Safe.to_string (env_to_yojson env)));
     raise (Undefined var)
 
 let rec zip lst1 lst2 =
@@ -42,7 +43,7 @@ let rec zip lst1 lst2 =
  
 let rec type_match_detect (t1 : t) (t2 : t) : bool =
   match t1, t2 with
-  | IsType (_, "Type"), _ -> true
+  | IsType (_, t), _ when t = const_type -> true
   | IsType (x, ""), IsType (y, "") -> x = y
   | IsType (x, ""), IsType (_, y) -> x = y
   | IsType (_, x), IsType (y, "") -> x = y
@@ -63,28 +64,30 @@ let rec replace_type (env : env) (t : t) : t =
   in
   match t with
   | IsType (v, "") -> find v 
+  | IsType (v, x) -> 
+    env.stack <- (v, t) :: env.stack; t 
   | OfType x -> find x
-  | Imply lst -> Imply (List.map (replace_type env) lst)
+  | Imply lst -> 
+    let type_env = {root = Some (env, List.length env.stack); stack = []} in
+    Imply (List.map (replace_type type_env) lst)
   | _ -> t
 
 let type_apply (fn_t : t) (args_t : t list) (current_env : env) : t =
-  let type_env = {root = None; stack = []} in
-  let fn_t_replaced = replace_type current_env fn_t in
-  let args_t_replaced = List.map (replace_type current_env) args_t in
+  let type_env = {root = Some (current_env, List.length current_env.stack); stack = []} in
   let rec apply (fn : t) (args : t list) : t =
     match fn, args with
     | Imply (fn_hd :: fn_tl), args_hd :: args_tl ->
-      if type_match_detect fn_hd args_hd then
+      if type_match_detect (replace_type type_env fn_hd) args_hd then
         ((match fn_hd with
             | IsType (v, _) -> 
               type_env.stack <- (v, args_hd) :: type_env.stack
             | _ -> ());
-         apply (Imply (List.map (replace_type type_env) fn_tl)) args_tl)
+         apply (Imply fn_tl) args_tl)
       else
         raise (TypeError (fn_hd, args_hd, "Type Mismatch"))
     | _ -> fn
   in
-  replace_type type_env (apply fn_t_replaced args_t_replaced)
+  replace_type type_env (apply fn_t args_t)
 
 let rec flatten_t (t : t) =
   match t with
@@ -99,17 +102,22 @@ let rec flatten_t (t : t) =
 let global_env = {root = None; stack = []}
 
 let type_check (env : env) (tree : term) lines_of_colnum : t =
+  let ref_char_pos = ref 0 in
+  let print_error error_str =
+    let (lnum, cnum) = Parse.calc_pos lines_of_colnum !ref_char_pos in
+    print_endline (error_str ^ " @ line:" ^ string_of_int lnum ^ " column:" ^ string_of_int cnum)
+  in
   let rec infer_and_check ?(assign_t : t option) (current_env : env) (tree : term) : t =
-    let ref_char_pos = ref 0 in
-    let print_error error_str =
-      let (lnum, cnum) = Parse.calc_pos lines_of_colnum !ref_char_pos in
-      print_endline (error_str ^ " @ line:" ^ string_of_int lnum ^ " column:" ^ string_of_int cnum)
-    in
     try
       match tree with
       | `Type info -> 
         ref_char_pos := info.pos;
-        info.t <- IsType (info.raw, if info.raw = "Type" then "Type" else "");
+        (if info.raw = const_type then
+          info.t <- IsType (const_type, const_type)
+        else
+          (match find_in_env info.raw current_env None with
+          | None -> ()
+          | Some (_, t) -> info.t <- t));
         info.t
       | `Var info -> 
         ref_char_pos := info.pos;
@@ -131,7 +139,7 @@ let type_check (env : env) (tree : term) lines_of_colnum : t =
           (match List.rev lst with
             | [] -> ()
             | hd :: _ -> 
-              if hd = IsType ("Type", "Type") then 
+              if hd = IsType (const_type, const_type) then 
                 current_env.stack <- (var, info.t) :: current_env.stack
               else
                 ())
@@ -164,7 +172,7 @@ let type_check (env : env) (tree : term) lines_of_colnum : t =
         let assigned_type = match assign_t with | None -> UnTyped | Some t -> t in 
         let (assigned_hd, assigned_tl) = match assigned_type with 
           | Imply (hd :: tl) -> ((match hd with 
-              | IsType (v, t) -> if t = "Type" then IsType (var, t) else OfType v
+              | IsType (v, t) -> if t = const_type then IsType (var, t) else OfType v
               | x -> x), Imply tl) 
           | _ -> (UnTyped, UnTyped) in
         current_env.stack <- (var, assigned_hd) :: current_env.stack;
