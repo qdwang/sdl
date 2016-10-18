@@ -27,11 +27,6 @@ then
         -pkg str \
         -pkg ppx_deriving_yojson \
         -pkg menhirLib \
-        -tag thread \
         -tag debug \
-        -tag bin_annot \
-        -tag short_paths \
-        -cflags "-w A-4-33-40-41-42-43-34-44" \
-        -cflags -strict-sequence \
         $dist
 fi
